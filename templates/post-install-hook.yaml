@@ -1,0 +1,35 @@
+{{ if or .Values.ingressgateway.enabled .Values.egressgateway.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ .Release.Name }}-post-install"
+  namespace: "{{ .Release.Namespace }}" 
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+    app.kubernetes.io/instance: {{ .Release.Name | quote }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+  annotations:
+    "helm.sh/hook": post-install, post-upgrade
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    metadata:
+      name: hook
+    spec:
+      serviceAccountName: istiod
+      restartPolicy: Never
+      initContainers:
+      - name: wait-for-istiod
+        image: {{ .Values.global.kubectlImage}}
+        command: ["/bin/bash"]
+        args: ["-c", "echo Waiting for Istiod in namespace  {{.Values.global.istioNamespace }}; kubectl wait --for=condition=Ready -l app=istiod pod  -n {{.Values.global.istioNamespace }}; echo Istiod is ready"]
+### Optimize logic to check on ingress first and only needed to restart if it is not ready
+      containers:
+        - name: restart-gateways
+          image: {{ .Values.global.kubectlImage}}
+          command: ["/bin/bash"]
+          args: ["-c", "sleep 10 && {{ if or .Values.ingressgateway.enabled }} kubectl rollout restart deployment -n {{.Release.Namespace }} {{.Values.ingressgateway.name}}; echo Restarted Istio-ingressgateway {{ end }}{{ if or .Values.egressgateway.enabled }} kubectl rollout restart deployment -n {{.Release.Namespace }} {{.Values.egressgateway.name }}; echo Restarted Istio-egressgateway {{ end }}"]
+
+{{ end }}          

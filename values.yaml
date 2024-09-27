@@ -1,0 +1,163 @@
+global:
+  logging:
+    level: "default:info"
+      
+  istioNamespace: "istio-system"
+  kubectlImage: bitnami/kubectl:1.30
+  defaultResources:
+    requests:
+      cpu: 10m
+      memory: 128Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+  proxy:
+    # This controls the 'policy' in the sidecar injector.
+    autoInject: enabled
+    seccompProfile:
+      type: RuntimeDefault 
+    privileged: false 
+      
+  defaultPodDisruptionBudget:
+    enabled: false 
+
+
+meshConfig:
+  enablePrometheusMerge: true
+  accessLogFile: /dev/stdout
+  enableAutoMtls: true
+  defaultConfig:
+    concurrency: 64
+  meshMTLS:
+    minProtocolVersion: TLSV1_2
+  outboundTrafficPolicy:
+    mode: REGISTRY_ONLY  
+
+istiod:
+  pilot:
+    resources:  
+      requests:
+        cpu: 10m
+        memory: 128Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi    
+    seccompProfile: 
+      type: RuntimeDefault   
+    cni:
+      enabled: true
+
+ztunnel:
+  enabled: false
+  
+
+cni: 
+  cni:
+    enabled: true
+    seccompProfile: 
+      type: RuntimeDefault 
+    logLevel: info
+    privileged: false
+    resources: 
+      requests:
+        cpu: 10m
+        memory: 128Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+
+
+egressgateway:
+  name: istio-egressgateway
+  enabled: false
+
+ingressgateway:
+  enabled: true 
+  name: istio-ingressgateway
+
+  #Have to customize if required 
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  autoscaling:
+    enabled: false    
+
+kiali:
+  enabled: true
+  istio_namespace: "istio-system"
+  deployment:
+    affinity:
+      node: {}
+      pod: {}
+      pod_anti: {}
+    ingress:
+      enabled: false    
+    instance_name: "kiali"
+    node_selector: {}
+    pod_annotations: {}
+    pod_labels: {}
+    resources:
+      requests:
+        cpu: "10m"
+        memory: "64Mi"
+      limits:
+        memory: "1Gi"
+    security_context:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
+      privileged: false
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
+      seccompProfile:
+        type: RuntimeDefault
+    version_label:
+  external_services:
+    custom_dashboards:
+      enabled: true
+    istio:
+      root_namespace: "istio-system"
+    prometheus:
+      url: http://prometheus.istio-system.svc.cluster.local
+   
+prometheus:
+  enabled: true
+  configmapReload:
+    prometheus:
+      ## If false, the configmap-reload container will not be deployed
+      enabled: false
+
+  server:
+    fullnameOverride: prometheus
+    tolerations: [] 
+    nodeSelector: {}
+    affinity: {}
+    podDisruptionBudget:
+      enabled: false
+    persistentVolume:
+      enabled: false
+
+  alertmanager:
+    enabled: false
+  
+  kube-state-metrics:
+    enabled: false
+  
+  prometheus-pushgateway:
+    enabled: false
+  
+  prometheus-node-exporter:
+    enabled: false
+
+grafana:
+  enabled: false
+  testFramework:
+    enabled: false
+    
