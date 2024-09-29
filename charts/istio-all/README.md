@@ -4,6 +4,9 @@ This is a consolidated chart installs all required components from Istio, along 
 
 You can customize the installation by overriding values from dependent istio, kiali and prometheus values.
 
+Updates in v1.1.0:  Istio *Ambient* mode is supported now. 
+
+
 ## Setup Repo Info
 
 ```console
@@ -61,6 +64,24 @@ meshConfig:
   accessLogFile: /dev/stdout
 ```
 
+Istio ambient mode can be enabled using configuration below: 
+
+```yaml
+global:
+  profile: ambient
+
+istiod:
+  profile: ambient
+
+cni:
+  enabled: true
+  profile: ambient
+
+ztunnel:
+  enabled: true
+  profile: ambient
+```
+
 Any [ingress-gateway](https://artifacthub.io/packages/helm/istio-official/gateway) or egress-gateway options can be configured like below: 
 
 ```yaml
@@ -69,7 +90,6 @@ ingressgateway:
     annotations: 
       ...
 ```
-
 
 Only [kiali-server](https://kiali.io/docs/installation/installation-guide/install-with-helm/#standalone-kiali-installation) will be installed and options can be configured like below: 
 
@@ -80,7 +100,6 @@ kiali:
 ```    
 
 Minimal [prometheus](https://istio.io/latest/docs/ops/integrations/prometheus/) will be installed as part of this chart by disabling `alertmanager`, `kube-state-metrics`, `prometheus-node-exporter` and `prometheus-pushgateway`.  These options can be configured by providing necessary values like below: 
-
 
 ```yaml 
 prometheus: 
