@@ -20,16 +20,16 @@ spec:
     spec:
       serviceAccountName: istiod
       restartPolicy: Never
-      initContainers:
-      - name: wait-for-istiod
-        image: {{ .Values.global.kubectlImage}}
-        command: ["/bin/bash"]
-        args: ["-c", "echo Waiting for Istiod in namespace  {{.Values.global.istioNamespace }}; kubectl wait --for=condition=Ready -l app=istiod pod  -n {{.Values.global.istioNamespace }}; echo Istiod is ready"]
+      # initContainers:
+      # - name: wait-for-istiod
+      #   image: {{ .Values.global.kubectlImage}}
+      #   command: ["/bin/bash"]
+      #   args: ["-c", "echo Waiting for Istiod in namespace  {{.Values.global.istioNamespace }}; kubectl wait --for=condition=Ready -l app=istiod pod  -n {{.Values.global.istioNamespace }}; echo Istiod is ready"]
 ### Optimize logic to check on ingress first and only needed to restart if it is not ready
       containers:
         - name: restart-gateways
           image: {{ .Values.global.kubectlImage}}
           command: ["/bin/bash"]
-          args: ["-c", "sleep 10 && {{ if or .Values.ingressgateway.enabled }} kubectl rollout restart deployment -n {{.Release.Namespace }} {{.Values.ingressgateway.name}}; echo Restarted Istio-ingressgateway {{ end }}{{ if or .Values.egressgateway.enabled }} kubectl rollout restart deployment -n {{.Release.Namespace }} {{.Values.egressgateway.name }}; echo Restarted Istio-egressgateway {{ end }}"]
+          args: ["-c", "echo Waiting for Istiod in namespace  {{.Values.global.istioNamespace }}; sleep 60; kubectl wait --for=condition=Ready -l app=istiod pod  -n {{.Values.global.istioNamespace }}; echo Istiod is ready; sleep 30 && {{ if or .Values.ingressgateway.enabled }} kubectl rollout restart deployment -n {{.Release.Namespace }} {{.Values.ingressgateway.name}}; echo Restarted Istio-ingressgateway {{ end }}{{ if or .Values.egressgateway.enabled }} kubectl rollout restart deployment -n {{.Release.Namespace }} {{.Values.egressgateway.name }}; echo Restarted Istio-egressgateway {{ end }}"]
 
 {{ end }}          
